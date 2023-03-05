@@ -184,7 +184,7 @@ const SPAM_RULES = {
       "confirmation in 48",
       "confirmation in 6",
       "confirmation in 2",
-      "1 Hour Confirmation",
+      "1 hour Confirmation",
       "c o n f i r m a t i o n",
       "very genuine booking",
       "hyderabad mumbai new delhi and chennai",
@@ -192,6 +192,7 @@ const SPAM_RULES = {
       "pmfs",
       "he really changed my life",
       "paying after booking only",
+      "93907"
     ]
   },
   photoText: {
@@ -210,7 +211,7 @@ const SPAM_RULES = {
       "confirmation in 48",
       "confirmation in 6",
       "confirmation in 2",
-      "1 Hour Confirmation",
+      "1 hour confirmation",
       "c o n f i r m a t i o n",
       "slot agency",
       "payment after",
