@@ -118,7 +118,15 @@ const reportUser = (msg: NewMessageEvent, message: IMessage, user: IUserInfo) =>
 }
 
 const processSpamRulesName = (message: IMessage, user: IUserInfo): boolean => {
-  return SPAM_RULES.fullName.blacklist.includes(removeAccents(user.fullName).toLowerCase());
+  let isSpam = false, textToCheck = removeAccents(user.fullName).toLowerCase();
+  SPAM_RULES.fullName.blacklist.some(rule => {
+    if (textToCheck.includes(rule)) {
+      isSpam = true;
+      return true;
+    }
+  });
+
+  return isSpam;
 };
 
 const processSpamRulesText = (message: IMessage, user: IUserInfo): boolean => {
@@ -173,10 +181,11 @@ const SPAM_RULES = {
       "agency",
       "check bio",
       "in my bio",
-      "slot updates",
+      "updates",
       "visa",
       "slot",
-      "ping me"
+      "ping me",
+      "dm me"
     ]
   },
   textFull: {
