@@ -7,6 +7,7 @@ import InputReportReasonSpam = Api.InputReportReasonSpam;
 import moment from "moment";
 import MessageMediaPhoto = Api.MessageMediaPhoto;
 import CONFIG from "./constants.json";
+import { message } from "telegram/client";
 const tesseract = require("node-tesseract-ocr")
 
 const MEDIA_DIR = "./media";
@@ -91,18 +92,22 @@ export const checkIfSpam = (message: IMessage, user: IUserInfo): boolean => {
 }
 
 export const banUser = async (msg: NewMessageEvent, user: IUserInfo): Promise<void> => {
-  await msg.client.invoke(new Api.channels.EditBanned({
-    channel: msg._chatPeer,
-    participant: msg.message.senderId,
-    bannedRights: new Api.ChatBannedRights({
-      inviteUsers: true,
-      viewMessages: true,
-      sendMessages: true,
-      sendMedia: true,
-      untilDate: 0
-    })
+  try {
+    await msg.client.invoke(new Api.channels.EditBanned({
+        channel: msg._chatPeer,
+        participant: msg.message.senderId,
+        bannedRights: new Api.ChatBannedRights({
+          inviteUsers: true,
+          viewMessages: true,
+          sendMessages: true,
+          sendMedia: true,
+          untilDate: 0
+        })
+      }
+    ));
+  } catch (e) {
+    console.log("Ban user failed: ", user, msg.message?.text);
   }
-  ));
 };
 
 const reportUser = (msg: NewMessageEvent, message: IMessage, user: IUserInfo) => {
