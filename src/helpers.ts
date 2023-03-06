@@ -119,8 +119,8 @@ const processSpamRulesName = (message: IMessage, user: IUserInfo): boolean => {
 };
 
 const processSpamRulesText = (message: IMessage, user: IUserInfo): boolean => {
-  let textToCheck = message.text.replace(/\n/ig, " ");
-  textToCheck = textToCheck.replace(/\s+/ig, " ").toLowerCase();
+  let textToCheck = message.text.replace(/\n/ig, " ").trim();
+  textToCheck = textToCheck.replace(/(\s|[^A-Za-z0-9])/ig, "").toLowerCase();
   let isSpam = false;
   SPAM_RULES.text.blacklist.some(rule => {
     if (textToCheck.includes(rule)) {
@@ -128,6 +128,10 @@ const processSpamRulesText = (message: IMessage, user: IUserInfo): boolean => {
       return true;
     }
   });
+
+  if (!isSpam) {
+    isSpam = SPAM_RULES.textFull.blacklist.includes(String(message.text).trim().toLowerCase());
+  }
   return isSpam;
 };
 
@@ -136,7 +140,7 @@ const processSpamRulesPhoto = (message: IMessage, user: IUserInfo): boolean => {
     return false;
   }
 
-  let textToCheck = message.photoText.replace(/\n/ig, " ");
+  let textToCheck = message.photoText.replace(/\n/ig, " ").trim();
   textToCheck = textToCheck.replace(/\s+/ig, " ").toLowerCase();
   let isSpam = false;
   SPAM_RULES.photoText.blacklist.some(rule => {
@@ -169,6 +173,13 @@ const SPAM_RULES = {
       "slot updates"
     ]
   },
+  textFull: {
+    type: 'text',
+    blacklist: [
+      "slots are available",
+      "slots available"
+    ]
+  },
   text: {
     type: "text",
     blacklist: [
@@ -184,12 +195,13 @@ const SPAM_RULES = {
       "confirmation in 48",
       "confirmation in 6",
       "confirmation in 2",
-      "1 hour Confirmation",
+      "1 hour confirmation",
       "c o n f i r m a t i o n",
       "very genuine booking",
       "hyderabad mumbai new delhi and chennai",
       "gwhatsapp",
       "pmfs",
+      "dmslots",
       "he really changed my life",
       "paying after booking only",
       "93907"
