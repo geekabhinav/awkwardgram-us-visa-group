@@ -128,7 +128,7 @@ const processSpamRulesText = (message: IMessage, user: IUserInfo): boolean => {
   textToCheck = textToCheck.replace(/(\s|[^A-Za-z0-9])/ig, "").toLowerCase();
   let isSpam = false;
   SPAM_RULES.text.blacklist.some(rule => {
-    if (textToCheck.includes(rule.replace(" ", ""))) {
+    if (textToCheck.includes(rule.replace(/\s/ig, ""))) {
       isSpam = true;
       return true;
     }
