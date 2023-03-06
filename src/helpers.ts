@@ -7,7 +7,6 @@ import InputReportReasonSpam = Api.InputReportReasonSpam;
 import moment from "moment";
 import MessageMediaPhoto = Api.MessageMediaPhoto;
 import CONFIG from "./constants.json";
-import { message } from "telegram/client";
 const tesseract = require("node-tesseract-ocr")
 
 const MEDIA_DIR = "./media";
@@ -95,18 +94,17 @@ export const banUser = async (msg: NewMessageEvent, user: IUserInfo): Promise<vo
   try {
     await msg.client.invoke(new Api.channels.EditBanned({
         channel: msg._chatPeer,
-        participant: msg.message.senderId,
+        participant: msg.message._inputSender,
         bannedRights: new Api.ChatBannedRights({
-          inviteUsers: true,
-          viewMessages: true,
           sendMessages: true,
+          viewMessages: true,
           sendMedia: true,
           untilDate: 0
         })
       }
     ));
   } catch (e) {
-    console.log("Ban user failed: ", user, msg.message?.text);
+    console.log("Ban user failed: ", e, user, msg.message?.text);
   }
 };
 
@@ -116,16 +114,16 @@ const reportUser = (msg: NewMessageEvent, message: IMessage, user: IUserInfo) =>
     peer: msg._chatPeer,
     id: [msg.message.id],
     reason: new InputReportReasonSpam()
-  })).then((response) => logEvents(msg, message, user))
+  })).catch(() => null).finally(() => logEvents(msg, message, user));
 }
 
 const processSpamRulesName = (message: IMessage, user: IUserInfo): boolean => {
-  return SPAM_RULES.fullName.blacklist.includes(user.fullName.toLowerCase());
+  return SPAM_RULES.fullName.blacklist.includes(removeAccents(user.fullName).toLowerCase());
 };
 
 const processSpamRulesText = (message: IMessage, user: IUserInfo): boolean => {
   let textToCheck = message.text.replace(/\n/ig, " ").trim();
-  textToCheck = textToCheck.replace(/(\s|[^A-Za-z0-9])/ig, "").toLowerCase();
+  textToCheck = removeAccents(textToCheck).replace(/(\s|[^A-Za-z0-9])/ig, "").toLowerCase();
   let isSpam = false;
   SPAM_RULES.text.blacklist.some(rule => {
     if (textToCheck.includes(rule.replace(/\s/ig, ""))) {
@@ -135,7 +133,7 @@ const processSpamRulesText = (message: IMessage, user: IUserInfo): boolean => {
   });
 
   if (!isSpam) {
-    isSpam = SPAM_RULES.textFull.blacklist.includes(String(message.text).trim().toLowerCase());
+    isSpam = SPAM_RULES.textFull.blacklist.includes(removeAccents(message.text).trim().toLowerCase());
   }
   return isSpam;
 };
@@ -172,24 +170,31 @@ const SPAM_RULES = {
     type: "name",
     blacklist: [
       "owl slot",
-      "slot agency",
+      "agency",
       "check bio",
       "in my bio",
-      "slot updates"
+      "slot updates",
+      "visa",
+      "slot",
+      "ping me"
     ]
   },
   textFull: {
     type: 'text',
     blacklist: [
       "slots are available",
-      "slots available"
+      "slots available",
+      "slot available"
     ]
   },
   text: {
     type: "text",
     blacklist: [
       "ping me",
+      "png me",
       "dm me",
+      "dm for",
+      "dm for",
       "contact me",
       "pranavforhelp",
       "w h a t s a p p",
@@ -206,7 +211,7 @@ const SPAM_RULES = {
       "hyderabad mumbai new delhi and chennai",
       "gwhatsapp",
       "pmfs",
-      "dmslots",
+      "dm slots",
       "he really changed my life",
       "paying after booking only",
       "93907"
@@ -240,3 +245,5 @@ const SPAM_RULES = {
     ]
   }
 }
+
+const removeAccents = str => String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
