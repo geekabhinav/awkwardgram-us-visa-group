@@ -90,11 +90,35 @@ export const checkIfSpam = (message: IMessage, user: IUserInfo): boolean => {
   return [nameCheck, textCheck, photoCheck].indexOf(true) > -1;
 }
 
+export const getUser = async (msg: NewMessageEvent, retry = 0) => {
+  try {
+    let user = await msg.message.getInputSender();
+    if (!user) {
+      user = await msg.client.getInputEntity(msg.message._inputSender);
+    }
+    console.info("GET_USER_SUCCESS", `ATTEMPT_${retry+1}`, user)
+    return user;
+  } catch (e) {
+    if (retry <= 1) {
+      console.info("GET_USER_FAIL", `ATTEMPT_${retry+1}`, retry+1, e.message);
+      return await getUser(msg, retry+1);
+    } else {
+      return null;
+    }
+  }
+}
+
 export const banUser = async (msg: NewMessageEvent, user: IUserInfo): Promise<void> => {
   try {
+    const userEntity = await getUser(msg);
+    if (!userEntity) {
+      console.error("UNABLE_TO_BAN", user);
+      console.error("UNABLE_TO_BAN_MESSAGE", msg.message?.text);
+      return;
+    }
     await msg.client.invoke(new Api.channels.EditBanned({
         channel: msg._chatPeer,
-        participant: msg.message._inputSender,
+        participant: userEntity,
         bannedRights: new Api.ChatBannedRights({
           sendMessages: true,
           viewMessages: true,
@@ -192,8 +216,12 @@ const SPAM_RULES = {
     type: 'text',
     blacklist: [
       "slots are available",
+      "slots are available now",
       "slots available",
-      "slot available"
+      "slot available",
+      "dates available",
+      "dates are available",
+      "vi available"
     ]
   },
   text: {
@@ -201,10 +229,24 @@ const SPAM_RULES = {
     blacklist: [
       "ping me",
       "png me",
+      "pig me",
+      "p1ng me",
+      "ping for",
+      "msg me",
+      "message me",
+      "tnx my slot booked",
+      "send me a message",
+      "send me message",
+      "send me msg",
+      "thats my agent",
       "dm me",
+      "dmm me",
       "dm for",
-      "dm for",
+      "early vi available",
+      "inbox me",
+      "inbox if",
       "contact me",
+      "early visa available",
       "pranavforhelp",
       "w h a t s a p p",
       "confirmation within",
@@ -215,22 +257,32 @@ const SPAM_RULES = {
       "confirmation in 6",
       "confirmation in 2",
       "1 hour confirmation",
-      "c o n f i r m a t i o n",
       "very genuine booking",
       "hyderabad mumbai new delhi and chennai",
       "gwhatsapp",
       "pmfs",
       "dm slots",
+      "early dates available",
       "he really changed my life",
       "paying after booking only",
-      "93907"
+      "93907",
+      "95377",
+      "waste no time",
+      "lmk asap"
     ]
   },
   photoText: {
     type: "photo",
     blacklist: [
       "ping me",
+      "png me",
+      "pig me",
+      "p1ng me",
+      "msg me",
+      "message me",
       "dm me",
+      "dm for",
+      "inbox me",
       "contact me",
       "w h a t s a p p",
       "whatsapp",
@@ -250,7 +302,8 @@ const SPAM_RULES = {
       "ping me asap",
       "slots available",
       "100% genuine",
-      "visa agent"
+      "visa agent",
+      "95377"
     ]
   }
 }
